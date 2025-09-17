@@ -1,0 +1,42 @@
+graph TD
+  subgraph UI[Application Shell]
+    App
+    StartScreen
+    Canvas
+    WardrobePanel
+    OutfitStack
+    Footer
+  end
+
+  subgraph Services
+    GeminiService
+  end
+
+  subgraph Domain
+    WardrobeItem
+    OutfitLayer
+  end
+
+  subgraph Billing[Billing Extensions]
+    BillingOrchestrator
+    RevenueCatClient
+    LightningClient
+    BillingProviderInterface[(BillingProvider)]
+  end
+
+  App --> StartScreen
+  App --> Canvas
+  App --> WardrobePanel
+  App --> OutfitStack
+  App --> Footer
+  StartScreen -->|generate model| GeminiService
+  App -->|generate try-on| GeminiService
+  Canvas -->|generate pose| GeminiService
+  WardrobePanel --> WardrobeItem
+  OutfitStack --> OutfitLayer
+  App --> OutfitLayer
+
+  BillingOrchestrator --> BillingProviderInterface
+  BillingProviderInterface -.-> RevenueCatClient
+  BillingProviderInterface -.-> LightningClient
+  App -. future entitlements .-> BillingOrchestrator

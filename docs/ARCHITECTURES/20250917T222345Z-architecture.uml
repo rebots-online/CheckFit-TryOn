@@ -1,0 +1,74 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment center
+
+package "Application Shell" {
+  class App {
+    +modelImageUrl: string | null
+    +outfitHistory: OutfitLayer[]
+    +handleModelFinalized(url)
+    +handleGarmentSelect(file, info)
+    +handlePoseSelect(index)
+  }
+  class StartScreen
+  class Canvas
+  class WardrobePanel
+  class OutfitStack
+  class Footer
+}
+
+package "Services" {
+  class GeminiService {
+    +generateModelImage(file: File): Promise<string>
+    +generateVirtualTryOnImage(modelUrl: string, garment: File): Promise<string>
+    +generatePoseVariation(tryOnUrl: string, poseInstruction: string): Promise<string>
+  }
+}
+
+package "Domain" {
+  class WardrobeItem {
+    +id: string
+    +name: string
+    +url: string
+  }
+  class OutfitLayer {
+    +garment: WardrobeItem | null
+    +poseImages: Map<string, string>
+  }
+}
+
+App --> StartScreen : renders
+App --> Canvas : renders
+App --> WardrobePanel : renders
+App --> OutfitStack : renders
+App --> Footer : renders
+StartScreen --> GeminiService : generateModelImage
+Canvas --> GeminiService : generatePoseVariation
+App --> GeminiService : generateVirtualTryOnImage
+WardrobePanel --> WardrobeItem
+OutfitStack --> OutfitLayer
+App --> OutfitLayer
+
+' Proposed billing architecture additions
+package "Billing" {
+  interface BillingProvider {
+    +fetchPacks(): Promise<MicrosaasPack[]>
+    +purchasePack(id: string): Promise<EntitlementGrant>
+    +syncEntitlements(): Promise<EntitlementState>
+  }
+  class RevenueCatClient
+  class LightningClient
+  class BillingOrchestrator {
+    +setProvider(provider: BillingProvider)
+    +getEntitlements(): EntitlementState
+    +purchasePack(id: string)
+  }
+}
+
+BillingOrchestrator ..> BillingProvider
+BillingProvider <|.. RevenueCatClient
+BillingProvider <|.. LightningClient
+App --> BillingOrchestrator : future entitlements
+
+@enduml
